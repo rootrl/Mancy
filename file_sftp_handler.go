@@ -13,7 +13,7 @@ var (
 	chmodJobChan = make(chan bool)
 )
 
-func fileHandler() {
+func fileSftpHandler() {
 
 	// Create Event handler
 	go func() {

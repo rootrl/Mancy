@@ -64,11 +64,12 @@ func main() {
 
 	// handle the file events
 	go func() {
-		fileHandler()
+		// Handle file with sftp (autoLoad changes)
+		fileSftpHandler()
 		fileHandlerDone <- true
 	}()
 
+	// Waiting job done
 	<-watcherHandlerDone
 	<-fileHandlerDone
-
 }
