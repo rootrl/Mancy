@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// Check the file required is contains the ignore file
-// if contains, return true
+// Check if the file is contains the ignore file
+// If contains, return true
 func fileChecker(filename string) bool {
 	filePathName, err := filepath.Abs("./ignorefile")
 

@@ -15,6 +15,7 @@ var (
 
 func fileHandler() {
 
+	// Create Event handler
 	go func() {
 		for {
 			select {
@@ -30,6 +31,7 @@ func fileHandler() {
 		createJobChan <- true
 	}()
 
+	// Write event handler
 	go func() {
 		for {
 			select {
@@ -45,6 +47,7 @@ func fileHandler() {
 		writeJobChan <- true
 	}()
 
+	// Remove event handler
 	go func() {
 		for {
 			select {
@@ -60,6 +63,7 @@ func fileHandler() {
 		removeJobChan <- true
 	}()
 
+	// Rename event handler
 	go func() {
 		for {
 			select {
@@ -75,6 +79,7 @@ func fileHandler() {
 		renameJobChan <- true
 	}()
 
+	// Chmod event handler
 	go func() {
 		for {
 			select {
