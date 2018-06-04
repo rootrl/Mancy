@@ -2,10 +2,9 @@ package main
 
 import (
 	"log"
-	"github.com/fsnotify/fsnotify"
-	"path/filepath"
 	"os"
-	"fmt"
+	"path/filepath"
+	"github.com/fsnotify/fsnotify"
 )
 
 type Watch struct {
@@ -13,7 +12,7 @@ type Watch struct {
 }
 
 // handler jobs done
-var done = make(chan bool)
+var eventDone = make(chan bool)
 
 // Watch a directory
 func (w *Watch) watchDir(dir string) {
@@ -31,17 +30,18 @@ func (w *Watch) watchDir(dir string) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Print("Watching: ", path)
 		}
 
 		return nil
 	})
 
+	log.Print("Watching: ", dir)
+
 	// Handle the watch events
 	go eventsHandler(w)
 
 	// Await
-	<-done
+	<-eventDone
 }
 
 // Handle the watch events
@@ -54,7 +54,9 @@ func eventsHandler(w *Watch) {
 				if ev.Op&fsnotify.Create == fsnotify.Create {
 					fi, err := os.Stat(ev.Name)
 
-					fmt.Println(ev.Name)
+					if !fileChecker(ev.Name) {
+						fileCreateEvent <- ev.Name
+					}
 
 					if err == nil && fi.IsDir() {
 						w.watch.Add(ev.Name)
@@ -63,6 +65,9 @@ func eventsHandler(w *Watch) {
 
 				// write event
 				if ev.Op&fsnotify.Write == fsnotify.Write {
+					if !fileChecker(ev.Name) {
+						fileWriteEvent <- ev.Name
+					}
 				}
 
 				// delete event
@@ -73,24 +78,35 @@ func eventsHandler(w *Watch) {
 					if err == nil && fi.IsDir() {
 						w.watch.Remove(ev.Name)
 					}
-				}
+
+					if !fileChecker(ev.Name) {
+						fileRemoveEvent <- ev.Name
+					}
+ 				}
 
 				// Rename
 				if ev.Op&fsnotify.Rename == fsnotify.Rename {
 					w.watch.Remove(ev.Name)
+
+					if !fileChecker(ev.Name) {
+						fileRenameEvent <- ev.Name
+					}
 				}
 				// Chmod
 				if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+					if !fileChecker(ev.Name) {
+						fileChmodEvent <- ev.Name
+					}
 				}
 			}
 		case err := <-w.watch.Errors:
 			{
 				log.Fatal(err)
-				done <- true
+				eventDone <- true
 				return
 			}
 		}
 	}
 
-	done <- true
+	eventDone <- true
 }
