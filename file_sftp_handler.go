@@ -3,17 +3,33 @@ package main
 import (
 	"time"
 	"log"
+	"github.com/pkg/sftp"
 )
 
 var (
-	writeJobChan = make(chan bool)
+	writeJobChan  = make(chan bool)
 	createJobChan = make(chan bool)
 	removeJobChan = make(chan bool)
 	renameJobChan = make(chan bool)
-	chmodJobChan = make(chan bool)
+	chmodJobChan  = make(chan bool)
+	err           error
+	sftpClient    *sftp.Client
 )
 
 func fileSftpHandler() {
+	// Connect
+	sftpClient, err = connect("root", "@rootrl13156605816", "117.48.205.33", 22)
+
+	if err != nil {
+		log.Fatal("SSH connect error: ", err)
+	}
+
+	defer sftpClient.Close()
+
+	// Check if the remote dir exist
+	if _, err := sftpClient.Stat(*remoteDir); err != nil {
+		panic("Remote dir dose not exist: " + *remoteDir)
+	}
 
 	// Create Event handler
 	go func() {
@@ -25,6 +41,12 @@ func fileSftpHandler() {
 
 			case createFileName := <-fileCreateEvent:
 				log.Print("createFile:" + createFileName)
+
+				if isDir(createFileName) == 1 {
+					uploadDirectory(createFileName, *remoteDir)
+				} else {
+					uploadFile(createFileName, *remoteDir)
+				}
 			}
 		}
 
@@ -41,6 +63,14 @@ func fileSftpHandler() {
 
 			case writeFileName := <-fileWriteEvent:
 				log.Print("write file: " + writeFileName)
+
+				isDir := isDir(writeFileName)
+
+				if isDir == 1 {
+					uploadDirectory(writeFileName, *remoteDir)
+				} else if isDir == 0 {
+					uploadFile(writeFileName, *remoteDir)
+				}
 			}
 		}
 
@@ -56,7 +86,9 @@ func fileSftpHandler() {
 				//timeout for 3 seconds
 
 			case removeFileName := <-fileRemoveEvent:
-				log.Print("remove file" + removeFileName)
+				log.Print("remove file: " + removeFileName)
+
+				remove(removeFileName, *remoteDir)
 			}
 		}
 
@@ -72,7 +104,7 @@ func fileSftpHandler() {
 				//timeout for 3 seconds
 
 			case renameFileName := <-fileRenameEvent:
-				log.Print("rename file" + renameFileName)
+				log.Print("rename file: " + renameFileName)
 			}
 		}
 
