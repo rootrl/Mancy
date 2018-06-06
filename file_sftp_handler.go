@@ -3,15 +3,13 @@ package main
 import (
 	"time"
 	"log"
+	"sync"
+
 	"github.com/pkg/sftp"
 )
 
 var (
-	writeJobChan  = make(chan bool)
-	createJobChan = make(chan bool)
-	removeJobChan = make(chan bool)
-	renameJobChan = make(chan bool)
-	chmodJobChan  = make(chan bool)
+	wg sync.WaitGroup
 	err           error
 	sftpClient    *sftp.Client
 )
@@ -30,6 +28,8 @@ func fileSftpHandler() {
 	if _, err := sftpClient.Stat(*remoteDir); err != nil {
 		panic("Remote dir dose not exist: " + *remoteDir)
 	}
+
+	wg.Add(5)
 
 	// Create Event handler
 	go func() {
@@ -50,7 +50,7 @@ func fileSftpHandler() {
 			}
 		}
 
-		createJobChan <- true
+		defer wg.Done()
 	}()
 
 	// Write event handler
@@ -74,7 +74,7 @@ func fileSftpHandler() {
 			}
 		}
 
-		writeJobChan <- true
+		defer wg.Done()
 	}()
 
 	// Remove event handler
@@ -92,7 +92,7 @@ func fileSftpHandler() {
 			}
 		}
 
-		removeJobChan <- true
+		defer wg.Done()
 	}()
 
 	// Rename event handler
@@ -108,7 +108,7 @@ func fileSftpHandler() {
 			}
 		}
 
-		renameJobChan <- true
+		defer wg.Done()
 	}()
 
 	// Chmod event handler
@@ -124,12 +124,8 @@ func fileSftpHandler() {
 			}
 		}
 
-		chmodJobChan <- true
+		defer wg.Done()
 	}()
 
-	<-writeJobChan
-	<-createJobChan
-	<-removeJobChan
-	<-renameJobChan
-	<-chmodJobChan
+	wg.Wait()
 }

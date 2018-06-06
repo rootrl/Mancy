@@ -8,3 +8,9 @@ I start this project for learning golang and solve some problem in our develop e
 
 ## Develop Notes
 * The variable "sftpClient" is used as a global variable, that's not cool, Maybe better to define a sftp struct and provides set of methods
+
+
+## Todo
+
+* Add lock to sftp operator
+* Config file support
