@@ -16,7 +16,7 @@ var (
 
 func fileSftpHandler() {
 	// Connect
-	sftpClient, err = connect("root", "@rootrl13156605816", "117.48.205.33", 22)
+	sftpClient, err = connect("root", "password", "localhost", 22)
 
 	if err != nil {
 		log.Fatal("SSH connect error: ", err)
