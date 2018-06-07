@@ -16,7 +16,7 @@ var (
 
 func fileSftpHandler() {
 	// Connect
-	sftpClient, err = connect("root", "password", "localhost", 22)
+	sftpClient, err = connect(config.SshUserName, config.SshPassword, config.SshHost, config.SshPort)
 
 	if err != nil {
 		log.Fatal("SSH connect error: ", err)
@@ -25,8 +25,8 @@ func fileSftpHandler() {
 	defer sftpClient.Close()
 
 	// Check if the remote dir exist
-	if _, err := sftpClient.Stat(*remoteDir); err != nil {
-		panic("Remote dir dose not exist: " + *remoteDir)
+	if _, err := sftpClient.Stat(remoteDir); err != nil {
+		panic("Remote dir dose not exist: " + remoteDir)
 	}
 
 	wg.Add(5)
@@ -43,9 +43,9 @@ func fileSftpHandler() {
 				log.Print("createFile:" + createFileName)
 
 				if isDir(createFileName) == 1 {
-					uploadDirectory(createFileName, *remoteDir)
+					uploadDirectory(createFileName, remoteDir)
 				} else {
-					uploadFile(createFileName, *remoteDir)
+					uploadFile(createFileName, remoteDir)
 				}
 			}
 		}
@@ -67,9 +67,9 @@ func fileSftpHandler() {
 				isDir := isDir(writeFileName)
 
 				if isDir == 1 {
-					uploadDirectory(writeFileName, *remoteDir)
+					uploadDirectory(writeFileName, remoteDir)
 				} else if isDir == 0 {
-					uploadFile(writeFileName, *remoteDir)
+					uploadFile(writeFileName, remoteDir)
 				}
 			}
 		}
@@ -88,7 +88,7 @@ func fileSftpHandler() {
 			case removeFileName := <-fileRemoveEvent:
 				log.Print("remove file: " + removeFileName)
 
-				remove(removeFileName, *remoteDir)
+				remove(removeFileName, remoteDir)
 			}
 		}
 
@@ -105,6 +105,9 @@ func fileSftpHandler() {
 
 			case renameFileName := <-fileRenameEvent:
 				log.Print("rename file: " + renameFileName)
+
+				// Rename same as remove
+				remove(renameFileName, remoteDir)
 			}
 		}
 

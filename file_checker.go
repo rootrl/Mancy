@@ -1,43 +1,19 @@
 package main
 
 import (
-	"bufio"
-	"io"
-	"os"
-
-	"path/filepath"
 	"strings"
 )
 
 // Check if the file is contains the ignore file
-// If contains, return true
+// Return true if contains
 func fileChecker(filename string) bool {
-	filePathName, err := filepath.Abs("./ignorefile")
 
-	if err != nil {
-		return false
-	}
-
-	file, err := os.Open(filePathName)
-
-	if err != nil {
-		return  false
-	}
-
-	defer file.Close()
-
-	fileBuf := bufio.NewReader(file)
-
-	for {
-		content, _, endLine := fileBuf.ReadLine()
-		if endLine == io.EOF {
-			break
-		}
-
-		if strings.Contains(filename, string(content)) {
-			return  true
+	for _, ignoreFile := range config.IgnoreFiles {
+		if strings.Contains(filename, string(ignoreFile)) {
+			return true
 		}
 	}
 
 	return false
+
 }

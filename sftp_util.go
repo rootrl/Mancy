@@ -149,7 +149,7 @@ func removeDirectory(dir , remoteDir string) {
 	}
 
 	for _, fileInfo := range fileInfos {
-		if (fileInfo.IsDir()) {
+		if fileInfo.IsDir() {
 			fmt.Println("remove directory: ", path.Join(dir, fileInfo.Name()))
 			removeDirectory(path.Join(dir, fileInfo.Name()), remoteDir)
 		} else {
