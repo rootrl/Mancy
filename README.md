@@ -4,5 +4,10 @@
 
 I start this project for learning golang and solve some problem in our develop environment.
 
+## Usage
+1.  go get github.com/rootrl/Mancy
+2.  go build
+3.  run "Mancy" or "Mancy.ext"(windows)
+
 ## Todo
 * The variable "sftpClient" is used as a global variable, that's not cool, Maybe better to define a sftp struct and provides set of methods
